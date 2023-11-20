@@ -138,8 +138,6 @@ def PublicTest(epoch, save_state: TrainingState):
     # Save checkpoint.
     PublicTest_acc = 100. * correct / total
 
-    state.update_PublicTest_acc(PublicTest_acc, epoch)
-
     if PublicTest_acc > state.get_best_PublicTest_acc()[0]:
         print('Saving..')
         print("best_PublicTest_acc: %0.3f" % PublicTest_acc)
@@ -151,6 +149,8 @@ def PublicTest(epoch, save_state: TrainingState):
         if not os.path.isdir(path):
             os.mkdir(path)
         torch.save(save_state, os.path.join(path, 'PublicTest_model.t7'))
+
+    state.update_PublicTest_acc(PublicTest_acc, epoch)
 
 
 def PrivateTest(epoch, state: TrainingState):
@@ -179,8 +179,6 @@ def PrivateTest(epoch, state: TrainingState):
     # Save checkpoint.
     PrivateTest_acc = 100. * correct / total
 
-    state.update_PrivateTest_acc(PrivateTest_acc, epoch)
-
     if PrivateTest_acc > state.get_best_PrivateTest_acc()[0]:
         print('Saving..')
         print("best_PrivateTest_acc: %0.3f" % PrivateTest_acc)
@@ -199,6 +197,7 @@ def PrivateTest(epoch, state: TrainingState):
             os.mkdir(path)
         torch.save(save_state, os.path.join(path, 'PrivateTest_model.t7'))
 
+    state.update_PrivateTest_acc(PrivateTest_acc, epoch)
 
 if __name__ == "__main__":
     path = os.path.join(opt.dataset + '_' + opt.model)
