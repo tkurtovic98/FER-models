@@ -68,15 +68,23 @@ def _test(net, dataloader, lr=0.01, optimizer=None, loss_fn=nn.CrossEntropyLoss(
 
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(dataloader):
-            bs, ncrops, c, h, w = np.shape(inputs)
+            if len(np.shape(inputs)) == 5:
+              bs, ncrops, c, h, w = np.shape(inputs)
+            else:
+              bs, c, h, w = np.shape(inputs)
+
             inputs = inputs.view(-1, c, h, w)
 
             if use_cuda:
                 inputs, targets = inputs.cuda(), targets.cuda()
 
             outputs = net(inputs)
-            outputs_avg = outputs.view(
-                bs, ncrops, -1).mean(1)  # avg over crops
+            
+            if len(np.shape(inputs)) != 5:
+              outputs_avg = outputs
+            else:
+              outputs_avg = outputs.view(
+                  bs, ncrops, -1).mean(1)  # avg over crops
 
             loss = loss_fn(outputs_avg, targets)
             test_loss += loss.item()

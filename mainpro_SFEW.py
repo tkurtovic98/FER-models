@@ -17,9 +17,9 @@ if __name__ == "__main__":
     
     assert opt.dataset == "SFEW", "Dataset should be SFEW"
     
-    opt = parse_args()
-
-    path = os.path.join(opt.dataset + '_' + opt.model)
+    google_drive_path = '/content/drive/MyDrive/FER_Doktorski/FER-models'
+    name = opt.dataset + '_' + opt.model
+    path = os.path.join(google_drive_path, name)
 
     set_checkpoint_path(path)
 
@@ -54,14 +54,14 @@ if __name__ == "__main__":
     learning_rate = opt.lr
     learning_rate_decay = LearningRateDecay(start = 100, every=5, rate=0.9)
 
-    train_set_loader, test_set_loader, validation_set_loader = prepare_dataset(opt.bs)
+    train_set_loader, validation_set_loader, test_set_loader = prepare_dataset(opt.bs)
     
     for epoch in range(start_epoch, TOTAL_EPOCH):
         state.set_epoch(epoch)
         state = train(epoch, state, learning_rate_decay, net, train_set_loader, learning_rate, optimizer, loss_fn)
         # state = run_testing(epoch, state, net, test_set_loader, learning_rate, optimizer, loss_fn)
         state = run_validation(epoch, state, net, validation_set_loader, learning_rate, optimizer, loss_fn)
-        plot_progress(state)
+        plot_progress(state, name, img_path = google_drive_path)
 
     best_public_test_acc, best_public_test_epoch = state.get_best_PublicTest_acc()
     best_private_test_acc, best_private_test_epoch = state.get_best_PrivateTest_acc()

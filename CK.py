@@ -3,8 +3,8 @@ from PIL import Image
 import numpy as np
 import h5py
 import torch
-import torch.utils.data as data
 from torchvision import transforms
+import torch.utils.data as td
 
 CUT_SIZE = 44
 
@@ -32,8 +32,7 @@ def prepare_dataset(batch_size:int, fold: int):
 
     return trainloader, testloader
 
-
-class CK(data.Dataset):
+class CK(td.Dataset):
     """`CK+ Dataset.
 
     Args:

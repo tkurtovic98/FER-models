@@ -2,16 +2,35 @@ import os
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
+import torch
+
+CUT_SIZE = 44
+
+RESIZE_DIM = 224
 
 def prepare_dataset(batch_size: int = 32):
-    transform = transforms.Compose([
-        transforms.Resize((44, 44)),  # Resize to the input size of the model
+    transform_train = transforms.Compose([
+        transforms.Resize((RESIZE_DIM, RESIZE_DIM)),  # Resize to the input size of the model
+        transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
-    train_dataset = SFEW('./data/SFEW/Train', transform=transform)
-    val_dataset = SFEW('./data/SFEW/Val', transform=transform)
+    def transform_ten_crop(crops):
+        return torch.stack([transforms.ToTensor()(crop) for crop in crops])
+
+
+    transform_test = transforms.Compose([
+        transforms.Resize((RESIZE_DIM, RESIZE_DIM)),  # Resize to the input size of the model
+        # transforms.TenCrop(CUT_SIZE),
+        # transforms.Lambda(transform_ten_crop),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+    ])
+
+
+    train_dataset = SFEW('./data/SFEW/Train', transform=transform_train)
+    val_dataset = SFEW('./data/SFEW/Val', transform=transform_test)
     # test_dataset = SFEW('SFEW/test', transform=transform)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
