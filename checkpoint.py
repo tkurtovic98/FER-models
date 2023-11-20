@@ -16,7 +16,21 @@ def load_checkpoint(name:str) -> Checkpoint:
     assert os.path.isdir(checkpoint_path), 'Error: no checkpoint directory found!'
     checkpoint = torch.load(os.path.join(checkpoint_path, name))
 
-    return Checkpoint(**checkpoint)
+    return Checkpoint(
+      net = checkpoint['net'],
+      best_test_acc = checkpoint['best_PublicTest_acc'],
+      best_test_epoch = checkpoint['best_PublicTest_acc_epoch'],
+      best_val_acc=checkpoint['best_PrivateTest_acc'],
+      best_val_epoch=checkpoint['best_PrivateTest_acc_epoch']
+    )
+
+    # return Checkpoint(
+    #   net = checkpoint['net'],
+    #   best_test_acc = checkpoint['acc'],
+    #   best_test_epoch = checkpoint['epoch'],
+    # )
+
+    # return Checkpoint(**checkpoint)
 
 
 def save_checkpoint(name: str, checkpoint: Checkpoint):

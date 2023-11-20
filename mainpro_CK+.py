@@ -32,7 +32,16 @@ def parse_args():
 if __name__ == "__main__":
     opt = parse_args()
 
-    path = os.path.join(opt.dataset + '_' + opt.model, str(opt.fold))
+    if use_cuda:
+        print(f'Cuda device active: {torch.cuda.get_device_name(0)}')
+    else:
+        print("Cuda device not active...")
+    
+    google_drive_path = '/content/drive/MyDrive/FER_Doktorski/FER-models'
+
+    name = opt.dataset + '_' + opt.model
+
+    path = os.path.join(google_drive_path, name, str(opt.fold))
 
     set_checkpoint_path(path)
 
@@ -69,7 +78,7 @@ if __name__ == "__main__":
         state.set_epoch(epoch)
         state = train(epoch, state, learning_rate_decay, net, train_set_loader, learning_rate, optimizer, loss_fn)
         state = run_testing(epoch, state, net, test_set_loader, learning_rate, optimizer, loss_fn)
-        plot_progress(state)
+        plot_progress(state, f'{name}_{opt.fold}_{opt.bs}', img_path=google_drive_path)
 
     best_public_test_acc, best_public_test_epoch = state.get_best_PublicTest_acc()
 
