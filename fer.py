@@ -5,7 +5,43 @@ from PIL import Image
 import numpy as np
 import h5py
 import torch.utils.data as data
+import torchvision.transforms as transforms
+import torch
 
+cut_size = 44
+
+def prepare_dataset(batch_size: int):
+    # Data
+    print('==> Preparing data..')
+    transform_train = transforms.Compose([
+        transforms.RandomCrop(44),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+    ])
+
+
+    def transform_ten_crop(crops):
+        return torch.stack([transforms.ToTensor()(crop) for crop in crops])
+
+
+    transform_test = transforms.Compose([
+        transforms.TenCrop(cut_size),
+        transforms.Lambda(transform_ten_crop),
+    ])
+
+    trainset = FER2013(split='Training', transform=transform_train)
+    trainloader = torch.utils.data.DataLoader(
+        trainset, batch_size=batch_size, shuffle=True, num_workers=1)
+
+    PublicTestset = FER2013(split='PublicTest', transform=transform_test)
+    PublicTestloader = torch.utils.data.DataLoader(
+        PublicTestset, batch_size=batch_size, shuffle=False, num_workers=1)
+
+    PrivateTestset = FER2013(split='PrivateTest', transform=transform_test)
+    PrivateTestloader = torch.utils.data.DataLoader(
+        PrivateTestset, batch_size=batch_size, shuffle=False, num_workers=1)
+
+    return trainloader, PublicTestloader, PrivateTestloader
 
 class FER2013(data.Dataset):
     """`FER2013 Dataset.
