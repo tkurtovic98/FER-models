@@ -26,7 +26,7 @@ parser.add_argument('--dataset', type=str,
                     default='FER2013', help='CNN architecture')
 parser.add_argument('--bs', default=128, type=int, help='learning rate')
 parser.add_argument('--lr', default=0.01, type=float, help='learning rate')
-parser.add_argument('--resume', '-r', default=True, action='store_true',
+parser.add_argument('--resume', '-r', action='store_true',
                     help='resume from checkpoint')
 opt = parser.parse_args()
 
@@ -153,6 +153,7 @@ def PublicTest(epoch, state: TrainingState):
         torch.save(save_state, os.path.join(path, 'PublicTest_model.t7'))
 
     state.update_PublicTest_acc(PublicTest_acc, epoch)
+    state.add_public_test_loss(PublicTest_loss/(batch_idx+1))
 
 
 def PrivateTest(epoch, state: TrainingState):
@@ -199,6 +200,7 @@ def PrivateTest(epoch, state: TrainingState):
         torch.save(save_state, os.path.join(path, 'PrivateTest_model.t7'))
 
     state.update_PrivateTest_acc(PrivateTest_acc, epoch)
+    state.add_private_test_loss(PrivateTest_loss/(batch_idx+1))
 
 if __name__ == "__main__":
     path = os.path.join(opt.dataset + '_' + opt.model)
@@ -225,11 +227,14 @@ if __name__ == "__main__":
         best_PrivateTest_acc_epoch = checkpoint['best_PrivateTest_acc_epoch']
         start_epoch = checkpoint['best_PrivateTest_acc_epoch'] + 1
 
-        state.update_PrivateTest_acc(
-            best_PrivateTest_acc, best_PrivateTest_acc_epoch)
-        state.update_PublicTest_acc(best_PublicTest_acc, best_PublicTest_acc)
+        state.best_PrivateTest_acc = best_PrivateTest_acc
+        state.best_PrivateTest_acc_epoch = best_PrivateTest_acc_epoch
+
+        state.best_PublicTest_acc = best_PublicTest_acc
+        state.best_PrivateTest_acc_epoch = best_PublicTest_acc_epoch
     else:
         print('==> Building model..')
+        start_epoch = 0
 
     if use_cuda:
         net.cuda()
