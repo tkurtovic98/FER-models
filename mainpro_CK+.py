@@ -14,7 +14,6 @@ import os
 import argparse
 import utils
 from CK import CK
-from torch.autograd import Variable
 from models import *
 
 parser = argparse.ArgumentParser(description='PyTorch CK+ CNN Training')
@@ -39,7 +38,6 @@ learning_rate_decay_rate = 0.8 # 0.9
 cut_size = 44
 total_epoch = 60
 
-path = os.path.join(opt.dataset + '_' + opt.model, str(opt.fold))
 
 # Data
 print('==> Preparing data..')
@@ -59,30 +57,6 @@ trainloader = torch.utils.data.DataLoader(trainset, batch_size=opt.bs, shuffle=T
 testset = CK(split = 'Testing', fold = opt.fold, transform=transform_test)
 testloader = torch.utils.data.DataLoader(testset, batch_size=5, shuffle=False, num_workers=1)
 
-# Model
-if opt.model == 'VGG19':
-    net = VGG('VGG19')
-elif opt.model == 'Resnet18':
-    net = ResNet18()
-
-if opt.resume:
-    # Load checkpoint.
-    print('==> Resuming from checkpoint..')
-    assert os.path.isdir(path), 'Error: no checkpoint directory found!'
-    checkpoint = torch.load(os.path.join(path,'Test_model.t7'))
-    
-    net.load_state_dict(checkpoint['net'])
-    best_Test_acc = checkpoint['best_Test_acc']
-    best_Test_acc_epoch = checkpoint['best_Test_acc_epoch']
-    start_epoch = best_Test_acc_epoch + 1
-else:
-    print('==> Building model..')
-
-if use_cuda:
-    net.cuda()
-
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=opt.lr, momentum=0.9, weight_decay=5e-4)
 
 # Training
 def train(epoch):
@@ -106,15 +80,15 @@ def train(epoch):
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         if use_cuda:
             inputs, targets = inputs.cuda(), targets.cuda()
+
         optimizer.zero_grad()
-        inputs, targets = Variable(inputs), Variable(targets)
         outputs = net(inputs)
         loss = criterion(outputs, targets)
         loss.backward()
         utils.clip_gradient(optimizer, 0.1)
         optimizer.step()
 
-        train_loss += loss.data[0]
+        train_loss += loss.item()
         _, predicted = torch.max(outputs.data, 1)
         total += targets.size(0)
         correct += predicted.eq(targets.data).cpu().sum()
@@ -138,12 +112,12 @@ def test(epoch):
 
         if use_cuda:
             inputs, targets = inputs.cuda(), targets.cuda()
-        inputs, targets = Variable(inputs, volatile=True), Variable(targets)
+            
         outputs = net(inputs)
         outputs_avg = outputs.view(bs, ncrops, -1).mean(1)  # avg over crops
 
         loss = criterion(outputs_avg, targets)
-        PrivateTest_loss += loss.data[0]
+        PrivateTest_loss += loss.item()
         _, predicted = torch.max(outputs_avg.data, 1)
         total += targets.size(0)
         correct += predicted.eq(targets.data).cpu().sum()
@@ -168,9 +142,38 @@ def test(epoch):
         best_Test_acc = Test_acc
         best_Test_acc_epoch = epoch
 
-for epoch in range(start_epoch, total_epoch):
-    train(epoch)
-    test(epoch)
 
-print("best_Test_acc: %0.3f" % best_Test_acc)
-print("best_Test_acc_epoch: %d" % best_Test_acc_epoch)
+if __name__ == "__main__":
+    path = os.path.join(opt.dataset + '_' + opt.model, str(opt.fold))
+
+    # Model
+    if opt.model == 'VGG19':
+        net = VGG('VGG19')
+    elif opt.model == 'Resnet18':
+        net = ResNet18()
+
+    if opt.resume:
+        # Load checkpoint.
+        print('==> Resuming from checkpoint..')
+        assert os.path.isdir(path), 'Error: no checkpoint directory found!'
+        checkpoint = torch.load(os.path.join(path,'Test_model.t7'))
+        
+        net.load_state_dict(checkpoint['net'])
+        best_Test_acc = checkpoint['best_Test_acc']
+        best_Test_acc_epoch = checkpoint['best_Test_acc_epoch']
+        start_epoch = best_Test_acc_epoch + 1
+    else:
+        print('==> Building model..')
+
+    if use_cuda:
+        net.cuda()
+
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.SGD(net.parameters(), lr=opt.lr, momentum=0.9, weight_decay=5e-4)
+
+    for epoch in range(start_epoch, total_epoch):
+        train(epoch)
+        test(epoch)
+
+    print("best_Test_acc: %0.3f" % best_Test_acc)
+    print("best_Test_acc_epoch: %d" % best_Test_acc_epoch)

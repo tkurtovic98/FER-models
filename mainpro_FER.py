@@ -184,14 +184,13 @@ def PrivateTest(epoch, state: TrainingState):
         print("best_PrivateTest_acc: %0.3f" % PrivateTest_acc)
 
         best_public_acc, best_public_epoch = state.get_best_PublicTest_acc()
-        best_private_acc, best_private_epoch = state.get_best_PrivateTest_acc()
 
         save_state = {
             'net': net.state_dict() if use_cuda else net,
             'best_PublicTest_acc': best_public_acc,
-            'best_PrivateTest_acc': best_private_acc,
+            'best_PrivateTest_acc': PrivateTest_acc,
             'best_PublicTest_acc_epoch': best_public_epoch,
-            'best_PrivateTest_acc_epoch': best_private_epoch,
+            'best_PrivateTest_acc_epoch': epoch,
         }
         if not os.path.isdir(path):
             os.mkdir(path)
