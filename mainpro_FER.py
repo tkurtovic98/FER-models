@@ -142,7 +142,7 @@ def PublicTest(epoch, save_state: TrainingState):
         print('Saving..')
         print("best_PublicTest_acc: %0.3f" % PublicTest_acc)
         save_state = {
-            'net': net.state_dict() if use_cuda else net,
+            'net': net.state_dict(),
             'acc': PublicTest_acc,
             'epoch': epoch,
         }
@@ -186,7 +186,7 @@ def PrivateTest(epoch, state: TrainingState):
         best_public_acc, best_public_epoch = state.get_best_PublicTest_acc()
 
         save_state = {
-            'net': net.state_dict() if use_cuda else net,
+            'net': net.state_dict(),
             'best_PublicTest_acc': best_public_acc,
             'best_PrivateTest_acc': PrivateTest_acc,
             'best_PublicTest_acc_epoch': best_public_epoch,
@@ -215,7 +215,8 @@ if __name__ == "__main__":
         assert os.path.isdir(path), 'Error: no checkpoint directory found!'
         checkpoint = torch.load(os.path.join(path, 'PrivateTest_model.t7'))
 
-        net.load_state_dict(checkpoint['net'].state_dict())
+        net.load_state_dict(checkpoint['net'])
+
         best_PublicTest_acc = checkpoint['best_PublicTest_acc']
         best_PrivateTest_acc = checkpoint['best_PrivateTest_acc']
         best_PublicTest_acc_epoch = checkpoint['best_PublicTest_acc_epoch']
