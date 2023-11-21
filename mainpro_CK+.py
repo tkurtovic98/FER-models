@@ -15,6 +15,9 @@ import argparse
 import utils
 from CK import CK
 from models import *
+from training_state import TrainingState
+from plot_progress import plot_progress
+
 
 parser = argparse.ArgumentParser(description='PyTorch CK+ CNN Training')
 parser.add_argument('--model', type=str, default='VGG19', help='CNN architecture')
@@ -26,10 +29,6 @@ parser.add_argument('--resume', '-r', action='store_true', help='resume from che
 opt = parser.parse_args()
 
 use_cuda = torch.cuda.is_available()
-
-best_Test_acc = 0  # best PrivateTest accuracy
-best_Test_acc_epoch = 0
-start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 
 learning_rate_decay_start = 20  # 50
 learning_rate_decay_every = 1 # 5
@@ -47,9 +46,13 @@ transform_train = transforms.Compose([
     transforms.ToTensor(),
 ])
 
+def transform_ten_crop(crops):
+    return torch.stack([transforms.ToTensor()(crop) for crop in crops])
+
+
 transform_test = transforms.Compose([
     transforms.TenCrop(cut_size),
-    transforms.Lambda(lambda crops: torch.stack([transforms.ToTensor()(crop) for crop in crops])),
+    transforms.Lambda(transform_ten_crop),
 ])
 
 trainset = CK(split = 'Training', fold = opt.fold, transform=transform_train)
@@ -59,9 +62,8 @@ testloader = torch.utils.data.DataLoader(testset, batch_size=5, shuffle=False, n
 
 
 # Training
-def train(epoch):
+def train(epoch, state: TrainingState):
     print('\nEpoch: %d' % epoch)
-    global Train_acc
     net.train()
     train_loss = 0
     correct = 0
@@ -80,7 +82,6 @@ def train(epoch):
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         if use_cuda:
             inputs, targets = inputs.cuda(), targets.cuda()
-
         optimizer.zero_grad()
         outputs = net(inputs)
         loss = criterion(outputs, targets)
@@ -96,41 +97,45 @@ def train(epoch):
         utils.progress_bar(batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
             % (train_loss/(batch_idx+1), 100.*correct/total, correct, total))
 
-    Train_acc = 100.*correct/total
+    train_acc = 100.*correct/total
 
-def test(epoch):
-    global Test_acc
-    global best_Test_acc
-    global best_Test_acc_epoch
+    state.add_train_acc(train_acc)
+    state.add_train_loss(train_loss/(batch_idx+1))
+
+
+def test(epoch, state: TrainingState):
     net.eval()
     PrivateTest_loss = 0
     correct = 0
     total = 0
-    for batch_idx, (inputs, targets) in enumerate(testloader):
-        bs, ncrops, c, h, w = np.shape(inputs)
-        inputs = inputs.view(-1, c, h, w)
+    with torch.no_grad():
+        for batch_idx, (inputs, targets) in enumerate(testloader):
+            bs, ncrops, c, h, w = np.shape(inputs)
+            inputs = inputs.view(-1, c, h, w)
 
-        if use_cuda:
-            inputs, targets = inputs.cuda(), targets.cuda()
-            
-        outputs = net(inputs)
-        outputs_avg = outputs.view(bs, ncrops, -1).mean(1)  # avg over crops
+            if use_cuda:
+                inputs, targets = inputs.cuda(), targets.cuda()
+                
+            outputs = net(inputs)
+            outputs_avg = outputs.view(bs, ncrops, -1).mean(1)  # avg over crops
 
-        loss = criterion(outputs_avg, targets)
-        PrivateTest_loss += loss.item()
-        _, predicted = torch.max(outputs_avg.data, 1)
-        total += targets.size(0)
-        correct += predicted.eq(targets.data).cpu().sum()
+            loss = criterion(outputs_avg, targets)
+            PrivateTest_loss += loss.item()
+            _, predicted = torch.max(outputs_avg.data, 1)
+            total += targets.size(0)
+            correct += predicted.eq(targets.data).cpu().sum()
 
-        utils.progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
-            % (PrivateTest_loss / (batch_idx + 1), 100. * correct / total, correct, total))
+            utils.progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
+                % (PrivateTest_loss / (batch_idx + 1), 100. * correct / total, correct, total))
+    
     # Save checkpoint.
     Test_acc = 100.*correct/total
 
-    if Test_acc > best_Test_acc:
+    if Test_acc > state.get_best_PrivateTest_acc()[0]:
         print('Saving..')
         print("best_Test_acc: %0.3f" % Test_acc)
-        state = {'net': net.state_dict() if use_cuda else net,
+        state = {
+            'net': net.state_dict(),
             'best_Test_acc': Test_acc,
             'best_Test_acc_epoch': epoch,
         }
@@ -139,8 +144,8 @@ def test(epoch):
         if not os.path.isdir(path):
             os.mkdir(path)
         torch.save(state, os.path.join(path, 'Test_model.t7'))
-        best_Test_acc = Test_acc
-        best_Test_acc_epoch = epoch
+
+    state.update_PrivateTest_acc(Test_acc, epoch)
 
 
 if __name__ == "__main__":
@@ -152,6 +157,8 @@ if __name__ == "__main__":
     elif opt.model == 'Resnet18':
         net = ResNet18()
 
+    state = TrainingState()
+
     if opt.resume:
         # Load checkpoint.
         print('==> Resuming from checkpoint..')
@@ -162,6 +169,9 @@ if __name__ == "__main__":
         best_Test_acc = checkpoint['best_Test_acc']
         best_Test_acc_epoch = checkpoint['best_Test_acc_epoch']
         start_epoch = best_Test_acc_epoch + 1
+
+        state.best_PrivateTest_acc = best_Test_acc
+        state.best_PrivateTest_acc_epoch = best_Test_acc_epoch
     else:
         print('==> Building model..')
 
@@ -172,8 +182,10 @@ if __name__ == "__main__":
     optimizer = optim.SGD(net.parameters(), lr=opt.lr, momentum=0.9, weight_decay=5e-4)
 
     for epoch in range(start_epoch, total_epoch):
-        train(epoch)
-        test(epoch)
+        state.set_epoch(epoch)
+        train(epoch, state)
+        test(epoch, state)
+        plot_progress(state)
 
     print("best_Test_acc: %0.3f" % best_Test_acc)
     print("best_Test_acc_epoch: %d" % best_Test_acc_epoch)

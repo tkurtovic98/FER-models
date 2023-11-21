@@ -26,55 +26,25 @@ datapath = os.path.join('data','CK_data.h5')
 if not os.path.exists(os.path.dirname(datapath)):
     os.makedirs(os.path.dirname(datapath))
 
+image_paths = [
+    anger_path,
+    disgust_path,
+    fear_path,
+    happy_path,
+    sadness_path,
+    surprise_path,
+    contempt_path
+]
+
 # order the file, so the training set will not contain the test set (don't random)
-files = os.listdir(anger_path)
-files.sort()
-for filename in files:
-    I = skimage.io.imread(os.path.join(anger_path,filename))
-    data_x.append(I.tolist())
-    data_y.append(0)
 
-files = os.listdir(disgust_path)
-files.sort()
-for filename in files:
-    I = skimage.io.imread(os.path.join(disgust_path,filename))
-    data_x.append(I.tolist())
-    data_y.append(1)
-
-files = os.listdir(fear_path)
-files.sort()
-for filename in files:
-    I = skimage.io.imread(os.path.join(fear_path,filename))
-    data_x.append(I.tolist())
-    data_y.append(2)
-
-files = os.listdir(happy_path)
-files.sort()
-for filename in files:
-    I = skimage.io.imread(os.path.join(happy_path,filename))
-    data_x.append(I.tolist())
-    data_y.append(3)
-
-files = os.listdir(sadness_path)
-files.sort()
-for filename in files:
-    I = skimage.io.imread(os.path.join(sadness_path,filename))
-    data_x.append(I.tolist())
-    data_y.append(4)
-
-files = os.listdir(surprise_path)
-files.sort()
-for filename in files:
-    I = skimage.io.imread(os.path.join(surprise_path,filename))
-    data_x.append(I.tolist())
-    data_y.append(5)
-
-files = os.listdir(contempt_path)
-files.sort()
-for filename in files:
-    I = skimage.io.imread(os.path.join(contempt_path,filename))
-    data_x.append(I.tolist())
-    data_y.append(6)
+for index, image_path in enumerate(image_paths):
+    files = os.listdir(image_path)
+    files.sort()
+    for filename in files:
+        I = skimage.io.imread(os.path.join(image_path,filename))
+        data_x.append(I.tolist())
+        data_y.append(index)
 
 print(np.shape(data_x))
 print(np.shape(data_y))

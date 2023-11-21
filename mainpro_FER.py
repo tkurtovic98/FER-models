@@ -92,12 +92,12 @@ def train(epoch, state: TrainingState):
         if use_cuda:
             inputs, targets = inputs.cuda(), targets.cuda()
         optimizer.zero_grad()
-        inputs, targets = Variable(inputs), Variable(targets)
         outputs = net(inputs)
         loss = criterion(outputs, targets)
         loss.backward()
         utils.clip_gradient(optimizer, 0.1)
         optimizer.step()
+
         train_loss += loss.item()
         _, predicted = torch.max(outputs.data, 1)
         total += targets.size(0)
@@ -112,7 +112,7 @@ def train(epoch, state: TrainingState):
     state.add_train_loss(train_loss/(batch_idx+1))
 
 
-def PublicTest(epoch, save_state: TrainingState):
+def PublicTest(epoch, state: TrainingState):
     net.eval()
     PublicTest_loss = 0
     correct = 0
@@ -121,11 +121,13 @@ def PublicTest(epoch, save_state: TrainingState):
         for batch_idx, (inputs, targets) in enumerate(PublicTestloader):
             bs, ncrops, c, h, w = np.shape(inputs)
             inputs = inputs.view(-1, c, h, w)
+
             if use_cuda:
                 inputs, targets = inputs.cuda(), targets.cuda()
+                
             outputs = net(inputs)
-            outputs_avg = outputs.view(
-                bs, ncrops, -1).mean(1)  # avg over crops
+            outputs_avg = outputs.view(bs, ncrops, -1).mean(1)  # avg over crops
+            
             loss = criterion(outputs_avg, targets)
             PublicTest_loss += loss.item()
             _, predicted = torch.max(outputs_avg.data, 1)

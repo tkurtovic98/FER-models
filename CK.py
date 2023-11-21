@@ -24,42 +24,41 @@ class CK(data.Dataset):
         self.transform = transform
         self.split = split  # training set or test set
         self.fold = fold # the k-fold cross validation
-        self.data = h5py.File('./data/CK_data.h5', 'r', driver='core')
+        with h5py.File('./data/CK_data.h5', 'r', driver='core') as data:
+            number = len(data['data_label']) #981
+            sum_number = [0,135,312,387,594,678,927,981] # the sum of class number
+            test_number = [12,18,9,21,9,24,6] # the number of each class
 
-        number = len(self.data['data_label']) #981
-        sum_number = [0,135,312,387,594,678,927,981] # the sum of class number
-        test_number = [12,18,9,21,9,24,6] # the number of each class
+            test_index = []
+            train_index = []
 
-        test_index = []
-        train_index = []
+            for j in xrange(len(test_number)):
+                for k in xrange(test_number[j]):
+                    if self.fold != 10: #the last fold start from the last element
+                        test_index.append(sum_number[j]+(self.fold-1)*test_number[j]+k)
+                    else:
+                        test_index.append(sum_number[j+1]-1-k)
 
-        for j in xrange(len(test_number)):
-            for k in xrange(test_number[j]):
-                if self.fold != 10: #the last fold start from the last element
-                    test_index.append(sum_number[j]+(self.fold-1)*test_number[j]+k)
-                else:
-                    test_index.append(sum_number[j+1]-1-k)
+            for i in xrange(number):
+                if i not in test_index:
+                    train_index.append(i)
 
-        for i in xrange(number):
-            if i not in test_index:
-                train_index.append(i)
+            print(len(train_index),len(test_index))
 
-        print(len(train_index),len(test_index))
+            # now load the picked numpy arrays
+            if self.split == 'Training':
+                self.train_data = []
+                self.train_labels = []
+                for ind in xrange(len(train_index)):
+                    self.train_data.append(data['data_pixel'][train_index[ind]])
+                    self.train_labels.append(data['data_label'][train_index[ind]])
 
-        # now load the picked numpy arrays
-        if self.split == 'Training':
-            self.train_data = []
-            self.train_labels = []
-            for ind in xrange(len(train_index)):
-                self.train_data.append(self.data['data_pixel'][train_index[ind]])
-                self.train_labels.append(self.data['data_label'][train_index[ind]])
-
-        elif self.split == 'Testing':
-            self.test_data = []
-            self.test_labels = []
-            for ind in xrange(len(test_index)):
-                self.test_data.append(self.data['data_pixel'][test_index[ind]])
-                self.test_labels.append(self.data['data_label'][test_index[ind]])
+            elif self.split == 'Testing':
+                self.test_data = []
+                self.test_labels = []
+                for ind in xrange(len(test_index)):
+                    self.test_data.append(data['data_pixel'][test_index[ind]])
+                    self.test_labels.append(data['data_label'][test_index[ind]])
 
     def __getitem__(self, index):
         """
