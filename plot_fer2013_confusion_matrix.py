@@ -15,8 +15,7 @@ import argparse
 from fer import FER2013
 
 from torch.autograd import Variable
-import torchvision
-import transforms as transforms
+import torchvision.transforms as transforms
 from sklearn.metrics import confusion_matrix
 from models import *
 

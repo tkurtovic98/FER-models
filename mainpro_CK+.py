@@ -8,7 +8,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
 import torchvision
-import transforms as transforms
+import torchvision.transforms as transforms
 import numpy as np
 import os
 import argparse
@@ -174,6 +174,7 @@ if __name__ == "__main__":
         state.best_PrivateTest_acc_epoch = best_Test_acc_epoch
     else:
         print('==> Building model..')
+        start_epoch = 0
 
     if use_cuda:
         net.cuda()

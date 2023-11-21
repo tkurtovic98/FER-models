@@ -1,7 +1,7 @@
 """
 plot confusion_matrix of fold Test set of CK+
 """
-import transforms as transforms
+import torchvision.transforms as transforms
 
 import argparse
 import itertools
