@@ -1,16 +1,15 @@
 from __future__ import print_function
-from plot_progress import plot_progress
-from training_state import TrainingState
+from dataclasses import dataclass
+import numpy as np
 
 import torch
-import numpy as np
-import os
-import utils
 import torch.nn as nn
+import utils
+from training_state import TrainingState
+from checkpoint import Checkpoint, save_checkpoint
 
-from dataclasses import dataclass
+use_cuda = torch.cuda.is_available()
 
-from checkpoint import  Checkpoint, save_checkpoint
 
 @dataclass
 class LearningRateDecay():
@@ -18,12 +17,13 @@ class LearningRateDecay():
     every: int
     rate: float
 
-def train(epoch, state: TrainingState, learning_rate_decay: LearningRateDecay, use_cuda, net,dataloader,lr=0.01,optimizer=None,loss_fn = nn.CrossEntropyLoss()):
+
+def train(epoch, state: TrainingState, learning_rate_decay: LearningRateDecay, net, dataloader, lr=0.01, optimizer=None, loss_fn=nn.CrossEntropyLoss()):
     print('\nEpoch: %d' % epoch)
     net.train()
-    train_loss, correct, total = 0,0,0
+    train_loss, correct, total = 0, 0, 0
 
-    optimizer = optimizer or torch.optim.Adam(net.parameters(),lr=lr)
+    optimizer = optimizer or torch.optim.Adam(net.parameters(), lr=lr)
 
     if epoch > learning_rate_decay.start and learning_rate_decay.start >= 0:
         frac = (epoch - learning_rate_decay.start) // learning_rate_decay.every
@@ -59,13 +59,12 @@ def train(epoch, state: TrainingState, learning_rate_decay: LearningRateDecay, u
 
     return state
 
-use_cuda = torch.cuda.is_available()
 
-def _test(net,dataloader,lr=0.01,optimizer=None,loss_fn = nn.CrossEntropyLoss()):
+def _test(net, dataloader, lr=0.01, optimizer=None, loss_fn=nn.CrossEntropyLoss()):
     net.eval()
-    test_loss, correct, total = 0,0,0
+    test_loss, correct, total = 0, 0, 0
 
-    optimizer = optimizer or torch.optim.Adam(net.parameters(),lr=lr)
+    optimizer = optimizer or torch.optim.Adam(net.parameters(), lr=lr)
 
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(dataloader):
@@ -74,10 +73,11 @@ def _test(net,dataloader,lr=0.01,optimizer=None,loss_fn = nn.CrossEntropyLoss())
 
             if use_cuda:
                 inputs, targets = inputs.cuda(), targets.cuda()
-                
+
             outputs = net(inputs)
-            outputs_avg = outputs.view(bs, ncrops, -1).mean(1)  # avg over crops
-            
+            outputs_avg = outputs.view(
+                bs, ncrops, -1).mean(1)  # avg over crops
+
             loss = loss_fn(outputs_avg, targets)
             test_loss += loss.item()
             _, predicted = torch.max(outputs_avg.data, 1)
@@ -92,7 +92,7 @@ def _test(net,dataloader,lr=0.01,optimizer=None,loss_fn = nn.CrossEntropyLoss())
     return test_acc, test_loss/(batch_idx+1)
 
 
-def run_testing(epoch, state: TrainingState, net,dataloader,lr=0.01,optimizer=None,loss_fn = nn.CrossEntropyLoss()):
+def run_testing(epoch, state: TrainingState, net, dataloader, lr=0.01, optimizer=None, loss_fn=nn.CrossEntropyLoss()):
     test_acc, test_loss = _test(net, dataloader, lr, optimizer, loss_fn)
 
     if test_acc > state.get_best_PublicTest_acc()[0]:
@@ -100,39 +100,39 @@ def run_testing(epoch, state: TrainingState, net,dataloader,lr=0.01,optimizer=No
         print("best_PublicTest_acc: %0.3f" % test_acc)
 
         save_state = Checkpoint(
-            net= net.state_dict(),
-            best_test_acc= test_acc,
-            best_test_epoch= epoch,
+            net=net.state_dict(),
+            best_test_acc=test_acc,
+            best_test_epoch=epoch,
         )
 
         save_checkpoint('PublicTest_model.t7', save_state)
 
     state.update_PublicTest_acc(test_acc, epoch)
-    state.add_public_test_loss()
+    state.add_public_test_loss(test_loss)
 
     return state
 
-def run_validation(epoch, state: TrainingState, net,dataloader,lr=0.01,optimizer=None,loss_fn = nn.CrossEntropyLoss()):
+
+def run_validation(epoch, state: TrainingState, net, dataloader, lr=0.01, optimizer=None, loss_fn=nn.CrossEntropyLoss()):
     test_acc, test_loss = _test(net, dataloader, lr, optimizer, loss_fn)
 
     if test_acc > state.get_best_PrivateTest_acc()[0]:
-            print('Saving..')
-            print("best_PrivateTest_acc: %0.3f" % test_acc)
+        print('Saving..')
+        print("best_PrivateTest_acc: %0.3f" % test_acc)
 
-            best_public_acc, best_public_epoch = state.get_best_PublicTest_acc()
+        best_public_acc, best_public_epoch = state.get_best_PublicTest_acc()
 
-            save_state = Checkpoint(
-                net= net.state_dict(),
-                best_test_acc=best_public_acc,
-                best_test_epoch=best_public_epoch,
-                best_val_acc=test_acc,
-                best_val_epoch=epoch
-            )
+        save_state = Checkpoint(
+            net=net.state_dict(),
+            best_test_acc=best_public_acc,
+            best_test_epoch=best_public_epoch,
+            best_val_acc=test_acc,
+            best_val_epoch=epoch
+        )
 
-            save_checkpoint('PrivateTest_model.t7', save_state)
+        save_checkpoint('PrivateTest_model.t7', save_state)
 
     state.update_PrivateTest_acc(test_acc, epoch)
-    state.add_private_test_loss(test_loss) 
+    state.add_private_test_loss(test_loss)
 
     return state
-    

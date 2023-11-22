@@ -1,31 +1,26 @@
 '''Train Fer2013 with PyTorch.'''
 # 10 crop for data enhancement
 from __future__ import print_function
-from plot_progress import plot_progress
-from training_state import TrainingState
 
+import os
+import argparse
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import torch.nn.functional as F
-import torch.backends.cudnn as cudnn
-import torchvision
-import torchvision.transforms as transforms
-import numpy as np
-import os
-import argparse
-import utils
-from torch.autograd import Variable
-from models import *
+
 from fer import prepare_dataset
 
+from models import get_model
+
+from plot_progress import plot_progress
+from training_state import TrainingState
 from learning import LearningRateDecay
 
 from learning import train, run_testing, run_validation
 
 from checkpoint import load_checkpoint, set_checkpoint_path
 
-total_epoch = 250
+TOTAL_EPOCH = 250
 
 def parse_args():
     parser = argparse.ArgumentParser(description='PyTorch Fer2013 CNN Training')
@@ -37,9 +32,7 @@ def parse_args():
     parser.add_argument('--lr', default=0.01, type=float, help='learning rate')
     parser.add_argument('--resume', '-r', action='store_true',
                         help='resume from checkpoint')
-    opt = parser.parse_args()
-
-    return opt
+    return parser.parse_args()
 
 
 if __name__ == "__main__":
@@ -82,9 +75,9 @@ if __name__ == "__main__":
 
     train_set_loader, test_set_loader, validation_set_loader = prepare_dataset(opt.bs)
 
-    for epoch in range(start_epoch, total_epoch):
+    for epoch in range(start_epoch, TOTAL_EPOCH):
         state.set_epoch(epoch)
-        state = train(epoch, state, learning_rate_decay, use_cuda, net, train_set_loader, learning_rate, optimizer, loss_fn)
+        state = train(epoch, state, learning_rate_decay, net, train_set_loader, learning_rate, optimizer, loss_fn)
         state = run_testing(epoch, state, net, test_set_loader, learning_rate, optimizer, loss_fn)
         state = run_validation(epoch, state, net, validation_set_loader, learning_rate, optimizer, loss_fn)
         plot_progress(state)
