@@ -5,8 +5,7 @@ from __future__ import print_function
 import os
 import argparse
 import torch
-import torch.nn as nn
-import torch.optim as optim
+from torch import nn, optim
 
 from fer import prepare_dataset
 

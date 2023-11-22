@@ -1,6 +1,5 @@
 import torch
 from dataclasses import dataclass, asdict
-from typing import Union
 import os
 
 @dataclass
