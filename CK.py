@@ -2,7 +2,35 @@ from __future__ import print_function
 from PIL import Image
 import numpy as np
 import h5py
+import torch
 import torch.utils.data as data
+from torchvision import transforms
+
+CUT_SIZE = 44
+
+def prepare_dataset(batch_size:int, fold: int):
+    # Data
+    print('==> Preparing data..')
+    transform_train = transforms.Compose([
+        transforms.RandomCrop(CUT_SIZE),
+        transforms.RandomHorizontalFlip(),
+        transforms.ToTensor(),
+    ])
+
+    def transform_ten_crop(crops):
+        return torch.stack([transforms.ToTensor()(crop) for crop in crops])
+
+    transform_test = transforms.Compose([
+        transforms.TenCrop(CUT_SIZE),
+        transforms.Lambda(transform_ten_crop),
+    ])
+
+    trainset = CK(split = 'Training', fold = fold, transform=transform_train)
+    trainloader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=1)
+    testset = CK(split = 'Testing', fold = fold, transform=transform_test)
+    testloader = torch.utils.data.DataLoader(testset, batch_size=5, shuffle=False, num_workers=1)
+
+    return trainloader, testloader
 
 
 class CK(data.Dataset):
