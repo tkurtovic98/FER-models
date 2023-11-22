@@ -59,6 +59,8 @@ def train(epoch, state: TrainingState, learning_rate_decay: LearningRateDecay, u
 
     return state
 
+use_cuda = torch.cuda.is_available()
+
 def _test(net,dataloader,lr=0.01,optimizer=None,loss_fn = nn.CrossEntropyLoss()):
     net.eval()
     test_loss, correct, total = 0,0,0
