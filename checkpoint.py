@@ -8,8 +8,8 @@ class Checkpoint():
     net: dict
     best_test_acc: float
     best_test_epoch: float
-    best_val_acc: Union[float, None]
-    best_val_epoch: Union[float, None]
+    best_val_acc: float = None
+    best_val_epoch: float = None
 
 
 def load_checkpoint(name:str) -> Checkpoint:
