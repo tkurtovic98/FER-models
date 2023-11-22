@@ -5,13 +5,13 @@ from torchvision import transforms
 
 def prepare_dataset(batch_size: int = 32):
     transform = transforms.Compose([
-        transforms.Resize((224, 224)),  # Resize to the input size of the model
+        transforms.Resize((44, 44)),  # Resize to the input size of the model
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
-    train_dataset = SFEW('SFEW/train', transform=transform)
-    val_dataset = SFEW('SFEW/val', transform=transform)
+    train_dataset = SFEW('./data/SFEW/Train', transform=transform)
+    val_dataset = SFEW('./data/SFEW/Val', transform=transform)
     # test_dataset = SFEW('SFEW/test', transform=transform)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
