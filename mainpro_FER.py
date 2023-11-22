@@ -23,6 +23,8 @@ from learning import LearningRateDecay
 
 from learning import train, run_testing, run_validation
 
+from checkpoint import load_checkpoint, set_checkpoint_path
+
 total_epoch = 250
 
 def parse_args():
@@ -45,6 +47,8 @@ if __name__ == "__main__":
 
     path = os.path.join(opt.dataset + '_' + opt.model)
 
+    set_checkpoint_path(path)
+
     net = get_model(opt.model)
 
     state = TrainingState()
@@ -53,23 +57,17 @@ if __name__ == "__main__":
 
     if opt.resume:
         # Load checkpoint.
-        print('==> Resuming from checkpoint..')
-        assert os.path.isdir(path), 'Error: no checkpoint directory found!'
-        checkpoint = torch.load(os.path.join(path, 'PrivateTest_model.t7'))
+        checkpoint = load_checkpoint('PrivateTest_model.t7')
 
-        net.load_state_dict(checkpoint['net'])
+        net.load_state_dict(checkpoint.net)
 
-        best_PublicTest_acc = checkpoint['best_PublicTest_acc']
-        best_PrivateTest_acc = checkpoint['best_PrivateTest_acc']
-        best_PublicTest_acc_epoch = checkpoint['best_PublicTest_acc_epoch']
-        best_PrivateTest_acc_epoch = checkpoint['best_PrivateTest_acc_epoch']
-        start_epoch = checkpoint['best_PrivateTest_acc_epoch'] + 1
+        state.best_PrivateTest_acc = checkpoint.best_val_acc
+        state.best_PrivateTest_acc_epoch = checkpoint.best_val_epoch
 
-        state.best_PrivateTest_acc = best_PrivateTest_acc
-        state.best_PrivateTest_acc_epoch = best_PrivateTest_acc_epoch
+        state.best_PublicTest_acc = checkpoint.best_test_acc
+        state.best_PublicTest_acc_epoch = checkpoint.best_val_epoch
 
-        state.best_PublicTest_acc = best_PublicTest_acc
-        state.best_PrivateTest_acc_epoch = best_PublicTest_acc_epoch
+        start_epoch = checkpoint.best_val_epoch + 1
     else:
         print('==> Building model..')
         start_epoch = 0

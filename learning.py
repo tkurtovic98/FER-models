@@ -10,6 +10,8 @@ import torch.nn as nn
 
 from dataclasses import dataclass
 
+from checkpoint import  Checkpoint, save_checkpoint
+
 @dataclass
 class LearningRateDecay():
     start: int
@@ -94,14 +96,14 @@ def run_testing(epoch, state: TrainingState, net,dataloader,lr=0.01,optimizer=No
     if test_acc > state.get_best_PublicTest_acc()[0]:
         print('Saving..')
         print("best_PublicTest_acc: %0.3f" % test_acc)
-        save_state = {
-            'net': net.state_dict(),
-            'acc': test_acc,
-            'epoch': epoch,
-        }
-        if not os.path.isdir(path):
-            os.mkdir(path)
-        torch.save(save_state, os.path.join(path, 'PublicTest_model.t7'))
+
+        save_state = Checkpoint(
+            net= net.state_dict(),
+            best_test_acc= test_acc,
+            best_test_epoch= epoch,
+        )
+
+        save_checkpoint('PublicTest_model.t7', save_state)
 
     state.update_PublicTest_acc(test_acc, epoch)
     state.add_public_test_loss()
@@ -117,16 +119,15 @@ def run_validation(epoch, state: TrainingState, net,dataloader,lr=0.01,optimizer
 
             best_public_acc, best_public_epoch = state.get_best_PublicTest_acc()
 
-            save_state = {
-                'net': net.state_dict(),
-                'best_PublicTest_acc': best_public_acc,
-                'best_PrivateTest_acc': test_acc,
-                'best_PublicTest_acc_epoch': best_public_epoch,
-                'best_PrivateTest_acc_epoch': epoch,
-            }
-            if not os.path.isdir(path):
-                os.mkdir(path)
-            torch.save(save_state, os.path.join(path, 'PrivateTest_model.t7'))
+            save_state = Checkpoint(
+                net= net.state_dict(),
+                best_test_acc=best_public_acc,
+                best_test_epoch=best_public_epoch,
+                best_val_acc=test_acc,
+                best_val_epoch=epoch
+            )
+
+            save_checkpoint('PrivateTest_model.t7', save_state)
 
     state.update_PrivateTest_acc(test_acc, epoch)
     state.add_private_test_loss(test_loss) 
