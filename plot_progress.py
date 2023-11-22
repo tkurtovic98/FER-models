@@ -12,7 +12,9 @@ def plot_progress(state: TrainingState):
     plt.subplot(1, 2, 1)
     plt.plot(epochs, state.train_losses, label='Training Loss')
     plt.plot(epochs, state.public_losses, label='Testing Loss')
-    plt.plot(epochs, state.private_losses, label='Validation Loss')
+
+    if len(state.private_losses) != 0:
+        plt.plot(epochs, state.private_losses, label='Validation Loss')
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.title(f'Training Loss Over Time - Current epoch {state.epoch}')
@@ -22,7 +24,9 @@ def plot_progress(state: TrainingState):
     plt.subplot(1, 2, 2)
     plt.plot(epochs, state.train_accuracies, label='Training Accuracy')
     plt.plot(epochs, state.test_accuracies, label='Test Accuracy')
-    plt.plot(epochs, state.validation_accuracies, label='Validation Accuracy')
+
+    if len(state.validation_accuracies) != 0:
+        plt.plot(epochs, state.validation_accuracies, label='Validation Accuracy')
     plt.xlabel('Epochs')
     plt.ylabel('Accuracy')
     plt.title('Accuracy Over Time')
