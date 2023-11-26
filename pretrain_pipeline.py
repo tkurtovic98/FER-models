@@ -18,10 +18,15 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 TOTAL_EPOCH = 200
 BATCH_SIZE = 128
 LEARNING_RATE = 0.01
+DATASET = "FER2013"
+MODEL = "VGG19"
+GOOGLE_DRIVE = False
 
 if __name__ == "__main__":
     
-    path = os.path.join("FER2013" + '_' + "VGG19" + '_' + "pretrained")
+    root = '/content/drive/MyDrive/FER_Doktorski/FER-models' if GOOGLE_DRIVE else './'
+    name = f'{DATASET}_{MODEL}_pretrained' 
+    path = os.path.join(root, name)
 
     set_checkpoint_path(path)
     
