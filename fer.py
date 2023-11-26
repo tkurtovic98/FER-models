@@ -10,6 +10,10 @@ import torch
 
 cut_size = 44
 
+def transform_ten_crop(crops):
+    return torch.stack([transforms.ToTensor()(crop) for crop in crops])
+
+
 def prepare_dataset(batch_size: int):
     # Data
     print('==> Preparing data..')
@@ -18,11 +22,6 @@ def prepare_dataset(batch_size: int):
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
     ])
-
-
-    def transform_ten_crop(crops):
-        return torch.stack([transforms.ToTensor()(crop) for crop in crops])
-
 
     transform_test = transforms.Compose([
         transforms.TenCrop(cut_size),
