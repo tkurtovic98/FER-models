@@ -1,0 +1,16 @@
+name: FER
+channels:
+  - defaults
+dependencies:
+  - pytorch
+  - torchvision
+  - pytorch-cuda=11.8
+  - matplotlib
+  - h5py
+  - scikit-image
+  - torchinfo
+  - python=3.10
+  - opencv-python-headless
+  - pip
+  - pip:
+      facenet-pytorch
