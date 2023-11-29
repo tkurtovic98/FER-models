@@ -8,6 +8,9 @@ import utils
 from training_state import TrainingState
 from checkpoint import Checkpoint, save_checkpoint
 
+VALIDATION_MODEL_NAME = "Validation_model"
+TEST_MODEL_NAME = "Test_model"
+
 use_cuda = torch.cuda.is_available()
 
 
@@ -103,9 +106,9 @@ def _test(net, dataloader, lr=0.01, optimizer=None, loss_fn=nn.CrossEntropyLoss(
 def run_testing(epoch, state: TrainingState, net, dataloader, lr=0.01, optimizer=None, loss_fn=nn.CrossEntropyLoss()):
     test_acc, test_loss = _test(net, dataloader, lr, optimizer, loss_fn)
 
-    if test_acc > state.get_best_PublicTest_acc()[0]:
+    if test_acc > state.get_best_test_acc()[0]:
         print('Saving..')
-        print("best_PublicTest_acc: %0.3f" % test_acc)
+        print("Best test accuray: %0.3f" % test_acc)
 
         save_state = Checkpoint(
             net=net.state_dict(),
@@ -113,34 +116,35 @@ def run_testing(epoch, state: TrainingState, net, dataloader, lr=0.01, optimizer
             best_test_epoch=epoch,
         )
 
-        save_checkpoint('PublicTest_model.t7', save_state)
+        save_checkpoint(f'{TEST_MODEL_NAME}.t7', save_state)
 
-    state.update_PublicTest_acc(test_acc, epoch)
-    state.add_public_test_loss(test_loss)
+    state.update_test_acc(test_acc, epoch)
+    state.add_test_loss(test_loss)
 
     return state
 
 
 def run_validation(epoch, state: TrainingState, net, dataloader, lr=0.01, optimizer=None, loss_fn=nn.CrossEntropyLoss()):
-    test_acc, test_loss = _test(net, dataloader, lr, optimizer, loss_fn)
+    validation_acc, test_loss = _test(net, dataloader, lr, optimizer, loss_fn)
 
-    if test_acc > state.get_best_PrivateTest_acc()[0]:
+    if validation_acc > state.get_best_validation_acc()[0]:
         print('Saving..')
-        print("best_PrivateTest_acc: %0.3f" % test_acc)
+        print("Best validation test accuracy: %0.3f" % validation_acc)
 
-        best_public_acc, best_public_epoch = state.get_best_PublicTest_acc()
+        best_test_acc, best_test_epoch = state.get_best_test_acc()
 
         save_state = Checkpoint(
             net=net.state_dict(),
-            best_test_acc=best_public_acc,
-            best_test_epoch=best_public_epoch,
-            best_val_acc=test_acc,
+            best_test_acc=best_test_acc,
+            best_test_epoch=best_test_epoch,
+            best_val_acc=validation_acc,
             best_val_epoch=epoch
         )
 
-        save_checkpoint('PrivateTest_model.t7', save_state)
+        save_checkpoint(f'{VALIDATION_MODEL_NAME}.t7', save_state)
 
-    state.update_PrivateTest_acc(test_acc, epoch)
-    state.add_private_test_loss(test_loss)
+    state.update_validation_acc(validation_acc, epoch)
+    state.add_validation_loss(test_loss)
 
     return state
+

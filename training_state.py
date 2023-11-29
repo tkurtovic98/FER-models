@@ -1,9 +1,9 @@
 class TrainingState:
     def __init__(self):
-        self.best_PublicTest_acc = 0
-        self.best_PublicTest_acc_epoch = 0
-        self.best_PrivateTest_acc = 0
-        self.best_PrivateTest_acc_epoch = 0
+        self.best_validation_acc = 0
+        self.best_validation_acc_epoch = 0
+        self.best_test_acc = 0
+        self.best_test_acc_epoch = 0
         self.train_losses = []
         self.train_accuracies = []
         self.test_accuracies = []
@@ -21,26 +21,29 @@ class TrainingState:
     def add_train_loss(self, loss):
         self.train_losses.append(loss)
 
-    def add_private_test_loss(self, loss):
+    def add_test_loss(self, loss):
         self.private_losses.append(loss)
 
-    def add_public_test_loss(self, loss):
+    def add_validation_loss(self, loss):
         self.public_losses.append(loss)
 
-    def update_PublicTest_acc(self, acc, epoch):
+    def update_validation_acc(self, acc, epoch):
         self.test_accuracies.append(acc)
-        if acc > self.best_PublicTest_acc:
-            self.best_PublicTest_acc = acc
-            self.best_PublicTest_acc_epoch = epoch
+        if acc > self.best_validation_acc:
+            self.best_validation_acc = acc
+            self.best_validation_acc_epoch = epoch
 
-    def update_PrivateTest_acc(self, acc, epoch):
+    def update_test_acc(self, acc, epoch):
         self.validation_accuracies.append(acc)
-        if acc > self.best_PrivateTest_acc:
-            self.best_PrivateTest_acc = acc
-            self.best_PrivateTest_acc_epoch = epoch
+        if acc > self.best_test_acc:
+            self.best_test_acc = acc
+            self.best_test_acc_epoch = epoch
 
-    def get_best_PublicTest_acc(self):
-        return self.best_PublicTest_acc, self.best_PublicTest_acc_epoch
+    def get_best_test_acc(self):
+        return self.best_test_acc, self.best_test_acc_epoch
 
-    def get_best_PrivateTest_acc(self):
-        return self.best_PrivateTest_acc, self.best_PrivateTest_acc_epoch
+    def get_best_validation_acc(self):
+        return self.best_validation_acc, self.best_validation_acc_epoch
+
+
+

@@ -80,7 +80,8 @@ if __name__ == "__main__":
         state = run_testing(epoch, state, net, test_set_loader, learning_rate, optimizer, loss_fn)
         plot_progress(state, f'{name}_{opt.fold}_{opt.bs}', img_path=google_drive_path)
 
-    best_public_test_acc, best_public_test_epoch = state.get_best_PublicTest_acc()
+    best_test_acc, best_test_epoch = state.get_best_test_acc()
 
-    print("best_Test_acc: %0.3f" % best_public_test_acc)
-    print("best_Test_acc_epoch: %d" % best_public_test_epoch)
+    print("best_Test_acc: %0.3f" % best_test_acc)
+    print("best_Test_acc_epoch: %d" % best_test_epoch)
+

@@ -1,14 +1,12 @@
+import os
 import torch
 from torchvision import models
-from torchinfo import summary
-
 from torch import nn, optim
 from fer import prepare_dataset as fer_dataset
 from SFEW import prepare_dataset as sfew_dataset
-from learning import LearningRateDecay, train, run_validation, run_testing
+from learning import LearningRateDecay, train, run_validation
 from plot_progress import plot_progress
 
-import os
 
 from training_state import TrainingState
 
@@ -63,11 +61,11 @@ if __name__ == "__main__":
 
         net.load_state_dict(checkpoint.net)
 
-        state.best_PrivateTest_acc = checkpoint.best_val_acc
-        state.best_PrivateTest_acc_epoch = checkpoint.best_val_epoch
+        state.best_test_acc = checkpoint.best_test_acc
+        state.best_test_acc_epoch = checkpoint.best_test_epoch
 
-        state.best_PublicTest_acc = checkpoint.best_test_acc
-        state.best_PublicTest_acc_epoch = checkpoint.best_val_epoch
+        state.best_validation_acc = checkpoint.best_val_acc
+        state.best_validation_acc_epoch = checkpoint.best_val_epoch
 
         start_epoch = checkpoint.best_val_epoch + 1
 
@@ -93,10 +91,7 @@ if __name__ == "__main__":
             epoch, state, net, val_set_loader, LEARNING_RATE, optimizer, loss_fn)
         plot_progress(state, name, img_path=root)
 
-    best_public_test_acc, best_public_test_epoch = state.get_best_PublicTest_acc()
-    best_private_test_acc, best_private_test_epoch = state.get_best_PrivateTest_acc()
+    best_validation_acc, best_validation_epoch = state.get_best_validation_acc()
 
     print(
-        f"Best Public Test Accuracy: {best_public_test_acc} at Epoch {best_public_test_epoch}")
-    print(
-        f"Best Private Test Accuracy: {best_private_test_acc} at Epoch {best_private_test_epoch}")
+        f"Best Public Test Accuracy: {best_validation_acc} at Epoch {best_validation_epoch}")

@@ -28,11 +28,9 @@ def prepare_dataset(batch_size: int):
 
     transform_test = transforms.Compose([
         transforms.Resize((224,224)),
-
         # transforms.TenCrop(cut_size),
         # transforms.Lambda(transform_ten_crop),
         transforms.ToTensor(),
-
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 
     ])

@@ -60,11 +60,11 @@ if __name__ == "__main__":
 
         net.load_state_dict(checkpoint.net)
 
-        state.best_PrivateTest_acc = checkpoint.best_val_acc
-        state.best_PrivateTest_acc_epoch = checkpoint.best_val_epoch
+        state.best_test_acc = checkpoint.best_val_acc
+        state.best_test_acc_epoch = checkpoint.best_val_epoch
 
-        state.best_PublicTest_acc = checkpoint.best_test_acc
-        state.best_PublicTest_acc_epoch = checkpoint.best_val_epoch
+        state.best_validation_acc = checkpoint.best_test_acc
+        state.best_validation_acc_epoch = checkpoint.best_val_epoch
 
         start_epoch = checkpoint.best_val_epoch + 1
     else:
@@ -79,7 +79,7 @@ if __name__ == "__main__":
     learning_rate = opt.lr
     learning_rate_decay = LearningRateDecay(start = 80, every=5, rate=0.9)
 
-    train_set_loader, test_set_loader, validation_set_loader = prepare_dataset(opt.bs)
+    train_set_loader, validation_set_loader, test_set_loader = prepare_dataset(opt.bs)
 
     for epoch in range(start_epoch, TOTAL_EPOCH):
         state.set_epoch(epoch)
@@ -88,8 +88,8 @@ if __name__ == "__main__":
         state = run_validation(epoch, state, net, validation_set_loader, learning_rate, optimizer, loss_fn)
         plot_progress(state, name, img_path = google_drive_path)
 
-    best_public_test_acc, best_public_test_epoch = state.get_best_PublicTest_acc()
-    best_private_test_acc, best_private_test_epoch = state.get_best_PrivateTest_acc()
+    best_public_test_acc, best_public_test_epoch = state.get_best_test_acc()
+    best_private_test_acc, best_private_test_epoch = state.get_best_validation_acc()
 
     print(
         f"Best Public Test Accuracy: {best_public_test_acc} at Epoch {best_public_test_epoch}")
