@@ -4,3 +4,5 @@ SFEW/
 data/CK_data.h5
 
 __pycache__/
+
+.vscode
