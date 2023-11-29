@@ -62,6 +62,7 @@ def train(epoch, state: TrainingState, learning_rate_decay: LearningRateDecay, n
 
     return state
 
+CROPS_PRESENT_INPUT_DIMS = 5
 
 def _test(net, dataloader, lr=0.01, optimizer=None, loss_fn=nn.CrossEntropyLoss()):
     net.eval()
@@ -71,7 +72,9 @@ def _test(net, dataloader, lr=0.01, optimizer=None, loss_fn=nn.CrossEntropyLoss(
 
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(dataloader):
-            if len(np.shape(inputs)) == 5:
+            crops_present = len(np.shape(inputs)) == CROPS_PRESENT_INPUT_DIMS
+
+            if crops_present:
               bs, ncrops, c, h, w = np.shape(inputs)
             else:
               bs, c, h, w = np.shape(inputs)
@@ -83,7 +86,7 @@ def _test(net, dataloader, lr=0.01, optimizer=None, loss_fn=nn.CrossEntropyLoss(
 
             outputs = net(inputs)
             
-            if len(np.shape(inputs)) != 5:
+            if not crops_present:
               outputs_avg = outputs
             else:
               outputs_avg = outputs.view(
