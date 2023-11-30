@@ -23,7 +23,7 @@ parser.add_argument('--model', type=str, default='VGG19',
                     help='CNN architecture')
 parser.add_argument('--dataset', type=str,
                     default='FER2013', help='CNN architecture')
-parser.add_argument('--split', type=str, default='PrivateTest', help='split')
+parser.add_argument('--split', type=str, default='Validation', help='split')
 parser.add_argument('--pretrained', '-p', action='store_true', default=False)
 opt = parser.parse_args()
 
@@ -64,6 +64,10 @@ def plot_confusion_matrix(cm, classes,
 
 from torchvision import models
 
+
+VERSION = "1.0"
+
+
 if __name__ == "__main__":
     
     if opt.dataset == "FER2013":
@@ -72,9 +76,9 @@ if __name__ == "__main__":
     else:
         class_names = ['Angry', 'Disgust', 'Fear','Happy', 'Neutral','Sad', 'Surprise']
 
-    
-    google_drive_path = '/content/drive/MyDrive/FER_Doktorski/FER-models'
-    name = opt.dataset + '_' + opt.model
+    root = '/content/drive/MyDrive/FER_Doktorski/FER-models' if GOOGLE_DRIVE else './'
+    name = f'{DATASET}_{MODEL}_pretrained'
+    path = os.path.join(root,name, VERSION)
     
     if opt.pretrained:
         name+="_pretrained"
@@ -102,7 +106,7 @@ if __name__ == "__main__":
     net.cuda()
     net.eval()
 
-    _, _, test_set_loader = prepare_dataset(64 if opt.dataset == "FER2013" else 64)
+    _, _, test_set_loader = prepare_dataset(64)
 
     correct = 0
     total = 0
