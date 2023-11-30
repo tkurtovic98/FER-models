@@ -33,17 +33,31 @@ def parse_args():
     parser.add_argument('-lde', type=int, default=5, help='Decrease the learning rate every number of epochs.')
     parser.add_argument('-ldr', type=float, default=0.9, help='Rate of learning rate decay.')
     
+    parser.add_argument('-v', '--version', type=str, default='1.0', help='Model version')
+
     parser.add_argument('--fold', type=int, default=1, help="Used for k-fold algorithm")
     
     return parser.parse_args()
 
+
+import numpy as np
+
+label_to_weight: dict[int, float] = {
+    0: 7215/3995,
+    1: 7215/436,
+    2: 7215/4097,
+    3: 1,
+    4: 7215/4830,
+    5: 7215/3171,
+    6: 7215/4965
+}
 
 if __name__ == "__main__":
     opt = parse_args()
 
     root_path = opt.root 
     name = f'{opt.dataset}_{opt.model}'
-    path = os.path.join(root_path, name)
+    path = os.path.join(root_path, name, opt.version)
 
     set_checkpoint_path(path)
 
@@ -59,6 +73,7 @@ if __name__ == "__main__":
     state = TrainingState()
 
     use_cuda = torch.cuda.is_available()
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     if use_cuda:
         print(f'Cuda device active: {torch.cuda.get_device_name(0)}')
@@ -85,7 +100,9 @@ if __name__ == "__main__":
     if use_cuda:
         net.cuda()
 
-    loss_fn = nn.CrossEntropyLoss()
+    weights = torch.from_numpy(np.array(list(label_to_weight.values()), dtype=np.float32)).to(device)
+    loss_fn = nn.CrossEntropyLoss(weight=weights)
+
     optimizer = optim.SGD(net.parameters(), lr=opt.lr, momentum=0.9, weight_decay=5e-4)
     learning_rate = opt.lr
     learning_rate_decay = LearningRateDecay(start = opt.lds, every=opt.lde, rate=opt.ldr)
@@ -94,7 +111,7 @@ if __name__ == "__main__":
         state.set_epoch(epoch)
         state = train(epoch, state, learning_rate_decay, net, train_set_loader, learning_rate, optimizer, loss_fn)
         state = run_validation(epoch, state, net, validation_set_loader, learning_rate, optimizer, loss_fn)
-        plot_progress(state, name, img_path = root_path)
+        plot_progress(state, name, img_path = path)
 
     best_validation_acc, best_validation_epoch = state.get_best_validation_acc()
 

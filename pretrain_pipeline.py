@@ -89,7 +89,11 @@ if __name__ == "__main__":
     train_set_loader, val_set_loader, test_set_loader = prepare_dataset(
         BATCH_SIZE)
 
-    loss_fn = nn.CrossEntropyLoss(weight=torch.from_numpy(np.array(list(label_to_weight.values()), dtype=np.float32)))
+
+    weights = torch.from_numpy(np.array(list(label_to_weight.values()), dtype=np.float32)).to(device)
+
+    loss_fn = nn.CrossEntropyLoss(weight=weights)
+
     optimizer = optim.SGD(net.parameters(), lr=LEARNING_RATE,
                           momentum=0.9, weight_decay=5e-4)
     learning_rate_decay = LearningRateDecay(start=60, every=5, rate=0.9)
