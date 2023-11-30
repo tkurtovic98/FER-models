@@ -100,7 +100,7 @@ if __name__ == "__main__":
                       train_set_loader, LEARNING_RATE, optimizer, loss_fn)
         state = run_validation(
             epoch, state, net, val_set_loader, LEARNING_RATE, optimizer, loss_fn)
-        plot_progress(state, name, img_path=root)
+        plot_progress(state, name, img_path=path)
 
     best_validation_acc, best_validation_epoch = state.get_best_validation_acc()
 
