@@ -16,38 +16,41 @@ from checkpoint import set_checkpoint_path, load_checkpoint
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-TOTAL_EPOCH = 100
-BATCH_SIZE = 128
-LEARNING_RATE = 0.01
-DATASET = "FER2013"
-MODEL = "Resnet18"
-GOOGLE_DRIVE = True
-RESUME = False
-VERSION = "1.0"
-
-
-prepare_dataset = get_dataset_loader(DATASET)
+# label_to_weight: dict[int, float] = {
+#     0: 7215/3995,
+#     1: 7215/436,
+#     2: 7215/4097,
+#     3: 1,
+#     4: 7215/4830,
+#     5: 7215/3171,
+#     6: 7215/4965
+# }
 
 label_to_weight: dict[int, float] = {
-    0: 7215/3995,
-    1: 7215/436,
-    2: 7215/4097,
-    3: 1,
-    4: 7215/4830,
-    5: 7215/3171,
-    6: 7215/4965
+    0: 193/171,
+    1: 193/142,
+    2: 1,
+    3: 193/83,
+    4: 193/154,
+    5: 193/62,
+    6: 193/91
 }
 
+
+from main import parse_args
+
 if __name__ == "__main__":
-    root = '/content/drive/MyDrive/FER_Doktorski/FER-models' if GOOGLE_DRIVE else './'
-    name = f'{DATASET}_{MODEL}_pretrained'
-    path = os.path.join(root,name, VERSION)
+    opt = parse_args()
+
+    root_path = opt.root 
+    name = f'{opt.dataset}_{opt.model}'
+    path = os.path.join(root_path, name, opt.version)
 
     set_checkpoint_path(path)
 
     state = TrainingState()
 
-    if MODEL == "VGG19":
+    if opt.model == "VGG19":
         net = models.vgg19(weights='DEFAULT')
 
         net.classifier = torch.nn.Linear(25088, 7).to(device)
@@ -69,8 +72,8 @@ if __name__ == "__main__":
         net.layer4.requires_grad = False
 
     start_epoch = 0
-    if RESUME:
-        checkpoint = load_checkpoint('PrivateTest_model.t7')
+    if opt.resume:
+        checkpoint = load_checkpoint('Validation_model.t7')
 
         net.load_state_dict(checkpoint.net)
 
@@ -86,24 +89,22 @@ if __name__ == "__main__":
 
     print(net)
 
-    train_set_loader, val_set_loader, test_set_loader = prepare_dataset(
-        BATCH_SIZE)
-
+    train_set_loader, val_set_loader, test_set_loader = get_dataset_loader(opt.dataset)(opt.bs)
 
     weights = torch.from_numpy(np.array(list(label_to_weight.values()), dtype=np.float32)).to(device)
 
     loss_fn = nn.CrossEntropyLoss(weight=weights)
 
-    optimizer = optim.SGD(net.parameters(), lr=LEARNING_RATE,
-                          momentum=0.9, weight_decay=5e-4)
-    learning_rate_decay = LearningRateDecay(start=60, every=5, rate=0.9)
+    optimizer = optim.SGD(net.parameters(), lr=opt.lr, momentum=0.9, weight_decay=5e-4)
+    learning_rate = opt.lr
+    learning_rate_decay = LearningRateDecay(start = opt.lds, every=opt.lde, rate=opt.ldr)
 
-    for epoch in range(start_epoch, TOTAL_EPOCH):
+    for epoch in range(start_epoch, opt.epoch):
         state.set_epoch(epoch)
         state = train(epoch, state, learning_rate_decay, net,
-                      train_set_loader, LEARNING_RATE, optimizer, loss_fn)
+                      train_set_loader, learning_rate, optimizer, loss_fn)
         state = run_validation(
-            epoch, state, net, val_set_loader, LEARNING_RATE, optimizer, loss_fn)
+            epoch, state, net, val_set_loader, learning_rate, optimizer, loss_fn)
         plot_progress(state, name, img_path=path)
 
     best_validation_acc, best_validation_epoch = state.get_best_validation_acc()
