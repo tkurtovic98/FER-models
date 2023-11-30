@@ -34,6 +34,9 @@ def parse_args():
     parser.add_argument('-ldr', type=float, default=0.9, help='Rate of learning rate decay.')
     
     parser.add_argument('-v', '--version', type=str, default='1.0', help='Model version')
+    
+    parser.add_argument('--split', type=str, default='Validation', help='Dataset split to use.')
+    parser.add_argument('--pretrained', '-p', action='store_true', default=False, help='Indicates whether to use pretrained model or not.')
 
     parser.add_argument('--fold', type=int, default=1, help="Used for k-fold algorithm")
     
