@@ -9,7 +9,6 @@ import torch
 import os
 
 from sklearn.metrics import confusion_matrix
-from models import get_model
 
 from dataset_loaders import get_dataset_loader
 
@@ -95,21 +94,28 @@ if __name__ == "__main__":
     correct = 0
     total = 0
     all_target = []
+
+    CROPS_PRESENT_INPUT_DIMS = 5
+
     for batch_idx, (inputs, targets) in enumerate(test_set_loader):
-        if len(np.shape(inputs)) == 5:
-              bs, ncrops, c, h, w = np.shape(inputs)
+        crops_present = len(np.shape(inputs)) == CROPS_PRESENT_INPUT_DIMS
+
+        if crops_present:
+            bs, ncrops, c, h, w = np.shape(inputs)
         else:
-          bs, c, h, w = np.shape(inputs)
+            bs, c, h, w = np.shape(inputs)
 
         inputs = inputs.view(-1, c, h, w)
+
         inputs, targets = inputs.cuda(), targets.cuda()
+
         outputs = net(inputs)
-       
-        if len(np.shape(inputs)) != 5:
-          outputs_avg = outputs
+        
+        if not crops_present:
+            outputs_avg = outputs
         else:
-          outputs_avg = outputs.view(
-              bs, ncrops, -1).mean(1)  # avg over crops  # avg over crops
+            outputs_avg = outputs.view(
+                bs, ncrops, -1).mean(1)   # avg over crops
               
         _, predicted = torch.max(outputs_avg.data, 1)
 
