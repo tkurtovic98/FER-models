@@ -2,8 +2,10 @@ import os
 import torch
 from torchvision import models
 from torch import nn, optim
-from fer import prepare_dataset as fer_dataset
-from SFEW import prepare_dataset as sfew_dataset
+
+import numpy as np
+
+from dataset_loaders import get_dataset_loader
 from learning import LearningRateDecay, train, run_validation
 from plot_progress import plot_progress
 
@@ -18,17 +20,28 @@ TOTAL_EPOCH = 100
 BATCH_SIZE = 128
 LEARNING_RATE = 0.01
 DATASET = "FER2013"
-MODEL = "VGG19"
+MODEL = "Resnet18"
 GOOGLE_DRIVE = True
-RESUME = True
+RESUME = False
+VERSION = "1.0"
 
-prepare_dataset = fer_dataset if DATASET == "FER2013" else sfew_dataset
+
+prepare_dataset = get_dataset_loader(DATASET)
+
+label_to_weight: dict[int, float] = {
+    0: 7215/3995,
+    1: 7215/436,
+    2: 7215/4097,
+    3: 1,
+    4: 7215/4830,
+    5: 7215/3171,
+    6: 7215/4965
+}
 
 if __name__ == "__main__":
-
     root = '/content/drive/MyDrive/FER_Doktorski/FER-models' if GOOGLE_DRIVE else './'
     name = f'{DATASET}_{MODEL}_pretrained'
-    path = os.path.join(root, name)
+    path = os.path.join(root,name, VERSION)
 
     set_checkpoint_path(path)
 
@@ -76,7 +89,7 @@ if __name__ == "__main__":
     train_set_loader, val_set_loader, test_set_loader = prepare_dataset(
         BATCH_SIZE)
 
-    loss_fn = nn.CrossEntropyLoss()
+    loss_fn = nn.CrossEntropyLoss(weight=torch.from_numpy(np.array(list(label_to_weight.values()), dtype=np.float32)))
     optimizer = optim.SGD(net.parameters(), lr=LEARNING_RATE,
                           momentum=0.9, weight_decay=5e-4)
     learning_rate_decay = LearningRateDecay(start=60, every=5, rate=0.9)
@@ -85,8 +98,6 @@ if __name__ == "__main__":
         state.set_epoch(epoch)
         state = train(epoch, state, learning_rate_decay, net,
                       train_set_loader, LEARNING_RATE, optimizer, loss_fn)
-        # state = run_testing(epoch, state, net, test_set_loader, LEARNING_RATE, optimizer, loss_fn)
-        # break
         state = run_validation(
             epoch, state, net, val_set_loader, LEARNING_RATE, optimizer, loss_fn)
         plot_progress(state, name, img_path=root)
