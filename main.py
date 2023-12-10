@@ -5,6 +5,7 @@ import os
 import argparse
 import torch
 from torch import nn, optim
+from torchinfo import summary
 from torchvision import models as torchmodels
 
 from dataset_loaders import get_dataset_loader
@@ -108,7 +109,13 @@ if __name__ == "__main__":
             for x in net.features.parameters():
                 x.requires_grad = False
         elif opt.model == "AlexNet":
-            net = torchmodels.alexnet(weights='DEFAULT', num_classes = 7)
+            net = torchmodels.alexnet(weights='DEFAULT')
+            
+            last_cls_in_features = (net.classifier[-1]).in_features
+            
+            new_last_cls = nn.Linear(last_cls_in_features, 7)
+            
+            net.classifier[-1] = new_last_cls
         else:
             net = torchmodels.resnet18(weights='DEFAULT')
 
@@ -123,6 +130,8 @@ if __name__ == "__main__":
             net.layer4.requires_grad = False
     else:
         net = get_model(opt.model)
+        
+    summary(net)
 
     dataset_loader = get_dataset_loader(opt.dataset)
 
