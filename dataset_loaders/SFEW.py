@@ -59,7 +59,9 @@ class SFEW(Dataset):
 
     def __getitem__(self, idx):
         image_path = self.images[idx]
-        image = Image.open(image_path).convert('RGB')
+        # image = Image.open(image_path).convert('RGB')
+        image = Image.open(image_path)
+        
         label = self.labels[idx]
 
         if self.transform:
