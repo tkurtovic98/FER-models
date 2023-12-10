@@ -13,9 +13,24 @@ mtcnn = MTCNN(
     thresholds=[0.6, 0.7, 0.7]
 )
 
+import numpy as np
+
+def normalize(image: Image) -> Image:
+    img_arr = np.array(image)
+    
+    minval = img_arr.min()
+    maxval = img_arr.max()
+    if minval != maxval:
+        img_arr -= minval
+        img_arr *= (255.0/(maxval-minval))
+
+    norm_image = Image.fromarray(img_arr.astype('uint8'), image.mode )
+    
+    return norm_image
+
 def crop_face(image_path):
     image = Image.open(image_path)
-    image = image.convert('RGB')
+    image = image.convert('L')
 
     # Detect faces
     boxes, probs = mtcnn.detect(image)
@@ -26,14 +41,14 @@ def crop_face(image_path):
             if prob > 0.9:  # Adjust this threshold as needed
                 box = box.astype(int)
                 face = image.crop(box)
-                return face
+                return normalize(face)
     return None
 
-def resize_image(face, size=(224, 224)):
+def resize_image(face, size):
     face_resized = face.resize(size)
     return face_resized
 
-def preprocess_and_save(input_dir, output_dir):
+def preprocess_and_save(input_dir, output_dir, target_size = (224, 224)):
     dataset_types = os.listdir(input_dir)
     for dataset_type in dataset_types:
         if not os.path.isdir(os.path.join(input_dir,dataset_type)):
@@ -53,11 +68,11 @@ def preprocess_and_save(input_dir, output_dir):
                 face = crop_face(img_path)
 
                 if face is not None:
-                    face = resize_image(face)
+                    face = resize_image(face, target_size)
                     face.save(os.path.join(output_emotion_dir, img_file))
 # Paths to your dataset
 INPUT_DIR = './SFEW'  # Update this path
 OUTPUT_DIR = './data/SFEW'  # Update this path
 
 # Preprocess and save images
-preprocess_and_save(INPUT_DIR, OUTPUT_DIR)
+preprocess_and_save(INPUT_DIR, OUTPUT_DIR, (256, 256))

@@ -22,7 +22,7 @@ from checkpoint import load_checkpoint, set_checkpoint_path
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        description='PyTorch Fer2013 CNN Training')
+        description='PyTorch FER CNN Training')
     parser.add_argument('--model', type=str, default='VGG19',
                         help='Model architecture.')
     parser.add_argument('--dataset', type=str,
