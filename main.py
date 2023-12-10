@@ -131,7 +131,7 @@ if __name__ == "__main__":
     else:
         net = get_model(opt.model)
         
-    summary(net)
+    print(net)
 
     dataset_loader = get_dataset_loader(opt.dataset)
 
