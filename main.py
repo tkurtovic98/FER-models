@@ -13,7 +13,6 @@ from models import get_model
 
 from plot_progress import plot_progress
 from training_state import TrainingState
-from learning import LearningRateDecay
 
 from learning import train, run_validation
 
@@ -164,15 +163,16 @@ if __name__ == "__main__":
     learning_rate = opt.lr
     optimizer = optim.SGD(net.parameters(), lr=learning_rate,
                           momentum=0.9, weight_decay=5e-4)
-    learning_rate_decay = LearningRateDecay(
-        start=opt.lds, every=opt.lde, rate=opt.ldr)
+    
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=opt.lde, gamma=opt.ldr)
 
     for epoch in range(start_epoch, opt.epoch):
         state.set_epoch(epoch)
-        state = train(epoch, state, learning_rate_decay, net,
+        state = train(epoch, state, net,
                       train_set_loader, learning_rate, optimizer, loss_fn)
         state = run_validation(
             epoch, state, net, validation_set_loader, learning_rate, optimizer, loss_fn)
+        scheduler.step()
         plot_progress(state, name, img_path=path)
 
     best_validation_acc, best_validation_epoch = state.get_best_validation_acc()

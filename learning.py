@@ -14,28 +14,14 @@ TEST_MODEL_NAME = "Test_model"
 use_cuda = torch.cuda.is_available()
 
 
-@dataclass
-class LearningRateDecay():
-    start: int
-    every: int
-    rate: float
-
-
-def train(epoch, state: TrainingState, learning_rate_decay: LearningRateDecay, net, dataloader, lr=0.01, optimizer=None, loss_fn=nn.CrossEntropyLoss()):
+def train(epoch, state: TrainingState, net, dataloader, lr=0.01, optimizer=None, loss_fn=nn.CrossEntropyLoss()):
     print('\nEpoch: %d' % epoch)
     net.train()
     train_loss, correct, total = 0, 0, 0
 
     optimizer = optimizer or torch.optim.Adam(net.parameters(), lr=lr)
 
-    if epoch > learning_rate_decay.start and learning_rate_decay.start >= 0:
-        frac = (epoch - learning_rate_decay.start) // learning_rate_decay.every
-        decay_factor = learning_rate_decay.rate ** frac
-        current_lr = lr * decay_factor
-        utils.set_lr(optimizer, current_lr)  # set the decayed rate
-    else:
-        current_lr = lr
-    print('learning_rate: %s' % str(current_lr))
+    print(f'learning_rate: {optimizer.param_groups[0]["lr"]}')
 
     for batch_idx, (inputs, targets) in enumerate(dataloader):
         if use_cuda:
