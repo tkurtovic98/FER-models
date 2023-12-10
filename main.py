@@ -108,6 +108,8 @@ if __name__ == "__main__":
 
             for x in net.features.parameters():
                 x.requires_grad = False
+        elif opt.model == "AlexNet":
+            net = torchmodels.alexnet(weights='DEFAULT', num_classes = 7)
         else:
             net = torchmodels.resnet18(weights='DEFAULT')
 
@@ -154,9 +156,10 @@ if __name__ == "__main__":
     if use_cuda:
         net.cuda()
 
-    weights = torch.from_numpy(
-        np.array(list(label_to_weight.values()), dtype=np.float32)).to(device)
-    loss_fn = nn.CrossEntropyLoss(weight=weights)
+    # weights = torch.from_numpy(np.array(list(label_to_weight.values()), dtype=np.float32)).to(device)
+    # loss_fn = nn.CrossEntropyLoss(weight=weights)
+    
+    loss_fn = nn.CrossEntropyLoss()    
 
     learning_rate = opt.lr
     optimizer = optim.SGD(net.parameters(), lr=learning_rate,
