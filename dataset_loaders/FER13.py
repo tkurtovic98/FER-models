@@ -94,8 +94,8 @@ class FER2013(data.Dataset):
 
         # doing this so that it is consistent with all other datasets
         # to return a PIL Image
-        # img = img[:, :, np.newaxis]
-        # img = np.concatenate((img, img, img), axis=2)
+        img = img[:, :, np.newaxis]
+        img = np.concatenate((img, img, img), axis=2)
         img = Image.fromarray(img)
         if self.transform is not None:
             img = self.transform(img)

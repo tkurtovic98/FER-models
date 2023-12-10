@@ -10,9 +10,7 @@ RESIZE_DIM = 224
 
 def prepare_dataset(batch_size: int = 32):
     transform_train = transforms.Compose([
-        # transforms.Resize((RESIZE_DIM, RESIZE_DIM)),  # Resize to the input size of the model
-        transforms.CenterCrop((RESIZE_DIM, RESIZE_DIM)),  # Resize to the input size of the model
-        
+        transforms.Resize((RESIZE_DIM, RESIZE_DIM)),  # Resize to the input size of the model
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
@@ -23,9 +21,9 @@ def prepare_dataset(batch_size: int = 32):
 
 
     transform_test = transforms.Compose([
-        # transforms.Resize((RESIZE_DIM, RESIZE_DIM)),  # Resize to the input size of the model
-        transforms.TenCrop(RESIZE_DIM),
-        transforms.Lambda(transform_ten_crop),
+        transforms.Resize((RESIZE_DIM, RESIZE_DIM)),  # Resize to the input size of the model
+        # transforms.TenCrop(CUT_SIZE),
+        # transforms.Lambda(transform_ten_crop),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
@@ -61,9 +59,7 @@ class SFEW(Dataset):
 
     def __getitem__(self, idx):
         image_path = self.images[idx]
-        # image = Image.open(image_path).convert('RGB')
-        image = Image.open(image_path)
-        
+        image = Image.open(image_path).convert('RGB')
         label = self.labels[idx]
 
         if self.transform:
