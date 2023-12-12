@@ -27,6 +27,7 @@ def parse_args():
                         help='Model architecture.')
     parser.add_argument('--dataset', type=str,
                         required=True, help='Dataset to use.')
+    parser.add_argument('--outname', type=str, required=False, help='Custom output name to use.')
     parser.add_argument('--bs', default=128, type=int, help='Batch size.')
     parser.add_argument('--lr', default=0.01, type=float,
                         help='Learning rate.')
@@ -83,7 +84,7 @@ if __name__ == "__main__":
     opt = parse_args()
 
     root_path = opt.root
-    name = f'{opt.dataset}_{opt.model}'
+    name = f'{opt.dataset if opt.outname is not None else opt.outname}_{opt.model}'
     path = os.path.join(root_path, name, opt.version)
 
     set_checkpoint_path(path)

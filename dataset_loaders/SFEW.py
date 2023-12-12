@@ -3,6 +3,7 @@ from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms
 import torch
+import numpy as np
 
 CUT_SIZE = 44
 
@@ -59,7 +60,14 @@ class SFEW(Dataset):
 
     def __getitem__(self, idx):
         image_path = self.images[idx]
-        image = Image.open(image_path).convert('RGB')
+        image = Image.open(image_path)
+
+        img = np.array(image)
+        img = img[:, :, np.newaxis]
+        img = np.concatenate((img, img, img), axis=2)
+        
+        image = Image.fromarray(img)
+
         label = self.labels[idx]
 
         if self.transform:
