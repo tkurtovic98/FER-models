@@ -61,20 +61,28 @@ if __name__ == "__main__":
         class_names = ['Angry', 'Disgust', 'Fear','Happy', 'Neutral','Sad', 'Surprise']
 
     root = opt.root 
-    name = f'{opt.dataset}_{opt.model}'
+    name = f'{opt.dataset if opt.outname is None else opt.outname}_{opt.model}'
 
-    if opt.pretrained:
-        name+="_pretrained"
+    # if opt.pretrained:
+    #     name+="_pretrained"
 
     path = os.path.join(root,name, opt.version)
 
-    _, _, test_set_loader =  get_dataset_loader(opt.dataset)(64)
+    _, val_set_loader, test_set_loader =  get_dataset_loader(opt.dataset)(64)
 
     if opt.pretrained:
         if opt.model == "VGG19":
             net = models.vgg19(weights='DEFAULT')
             
             net.classifier = torch.nn.Linear(25088,7)
+        elif opt.model == "AlexNet":
+            net = torchmodels.alexnet(weights='DEFAULT')
+            
+            last_cls_in_features = (net.classifier[-1]).in_features
+            
+            new_last_cls = nn.Linear(last_cls_in_features, 7)
+            
+            net.classifier[-1] = new_last_cls
         else:
             net = models.resnet18(weights='DEFAULT')
 
