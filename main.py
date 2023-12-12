@@ -84,7 +84,7 @@ if __name__ == "__main__":
     opt = parse_args()
 
     root_path = opt.root
-    name = f'{opt.dataset if opt.outname is not None else opt.outname}_{opt.model}'
+    name = f'{opt.dataset if opt.outname is None else opt.outname}_{opt.model}'
     path = os.path.join(root_path, name, opt.version)
 
     set_checkpoint_path(path)
