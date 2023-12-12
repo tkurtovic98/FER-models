@@ -12,7 +12,7 @@ from sklearn.metrics import confusion_matrix
 
 from dataset_loaders import get_dataset_loader
 
-from torchvision import models
+from torchvision import models as torchmodels
 
 from main import parse_args
 
@@ -72,7 +72,7 @@ if __name__ == "__main__":
 
     if opt.pretrained:
         if opt.model == "VGG19":
-            net = models.vgg19(weights='DEFAULT')
+            net = torchmodels.vgg19(weights='DEFAULT')
             
             net.classifier = torch.nn.Linear(25088,7)
         elif opt.model == "AlexNet":
@@ -84,7 +84,7 @@ if __name__ == "__main__":
             
             net.classifier[-1] = new_last_cls
         else:
-            net = models.resnet18(weights='DEFAULT')
+            net = torchmodels.resnet18(weights='DEFAULT')
 
             num_features = net.fc.in_features
             net.fc = torch.nn.Linear(num_features, 7)
