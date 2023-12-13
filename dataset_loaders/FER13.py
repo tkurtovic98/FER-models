@@ -8,7 +8,7 @@ import torch.utils.data as data
 import torchvision.transforms as transforms
 import torch
 
-cut_size = 44
+cut_size = 224
 
 def transform_ten_crop(crops):
     return torch.stack([transforms.ToTensor()(crop) for crop in crops])
@@ -18,21 +18,20 @@ def prepare_dataset(batch_size: int):
     # Data
     print('==> Preparing data..')
     transform_train = transforms.Compose([
-        transforms.Resize((224,224)),
+        transforms.Resize((256,256)),
+        transforms.CenterCrop(cut_size),
         # transforms.RandomCrop(44),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-
+        # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
     transform_test = transforms.Compose([
-        transforms.Resize((224,224)),
-        # transforms.TenCrop(cut_size),
-        # transforms.Lambda(transform_ten_crop),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
-
+        transforms.Resize((256,256)),
+        transforms.TenCrop(cut_size),
+        transforms.Lambda(transform_ten_crop),
+        # transforms.ToTensor(),
+        # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
     trainset = FER2013(split='Training', transform=transform_train)

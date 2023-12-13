@@ -5,16 +5,17 @@ from torchvision import transforms
 import torch
 import numpy as np
 
-CUT_SIZE = 44
+CUT_SIZE = 224
 
 RESIZE_DIM = 224
 
 def prepare_dataset(batch_size: int = 32):
     transform_train = transforms.Compose([
-        transforms.Resize((RESIZE_DIM, RESIZE_DIM)),  # Resize to the input size of the model
+        transforms.CenterCrop((CUT_SIZE, CUT_SIZE)),
+        # transforms.Resize((RESIZE_DIM, RESIZE_DIM)),  # Resize to the input size of the model
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
     def transform_ten_crop(crops):
@@ -22,11 +23,11 @@ def prepare_dataset(batch_size: int = 32):
 
 
     transform_test = transforms.Compose([
-        transforms.Resize((RESIZE_DIM, RESIZE_DIM)),  # Resize to the input size of the model
-        # transforms.TenCrop(CUT_SIZE),
-        # transforms.Lambda(transform_ten_crop),
-        transforms.ToTensor(),
-        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
+        # transforms.Resize((RESIZE_DIM, RESIZE_DIM)),  # Resize to the input size of the model
+        transforms.TenCrop(RESIZE_DIM),
+        transforms.Lambda(transform_ten_crop),
+        # transforms.ToTensor(),
+        # transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
 
 
