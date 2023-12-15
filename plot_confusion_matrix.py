@@ -6,6 +6,8 @@ import matplotlib.pyplot as plt
 
 import torch
 
+from torch import nn
+
 import os
 
 from sklearn.metrics import confusion_matrix
@@ -105,7 +107,7 @@ if __name__ == "__main__":
 
     CROPS_PRESENT_INPUT_DIMS = 5
 
-    for batch_idx, (inputs, targets) in enumerate(test_set_loader):
+    for batch_idx, (inputs, targets) in enumerate(val_set_loader):
         crops_present = len(np.shape(inputs)) == CROPS_PRESENT_INPUT_DIMS
 
         if crops_present:
