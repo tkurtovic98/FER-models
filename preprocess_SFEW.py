@@ -57,6 +57,8 @@ def preprocess_and_save(input_dir, output_dir, target_size=(224, 224)):
     for dataset_type in dataset_types:
         if not os.path.isdir(os.path.join(input_dir, dataset_type)):
             continue
+        if dataset_type not in ["Train", "Val"]:
+            continue
         dataset_path = os.path.join(input_dir, dataset_type)
         output_dataset_path = os.path.join(output_dir, dataset_type)
         os.makedirs(output_dataset_path, exist_ok=True)
