@@ -75,3 +75,6 @@ class SFEW(Dataset):
             image = self.transform(image)
 
         return image, label
+
+# from utils import plot_ten_crop_images
+# plot_ten_crop_images(lambda: prepare_dataset(128), split="Val", how_many=3, save=True)

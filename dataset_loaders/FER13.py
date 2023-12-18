@@ -107,3 +107,7 @@ class FER2013(data.Dataset):
             return len(self.PublicTest_data)
         else:
             return len(self.PrivateTest_data)
+
+
+# from utils import plot_ten_crop_images
+# plot_ten_crop_images(lambda: prepare_dataset(128), split="Val", how_many=3 )
