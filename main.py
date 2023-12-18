@@ -182,7 +182,8 @@ if __name__ == "__main__":
                       train_set_loader, learning_rate, optimizer, loss_fn)
         state = run_validation(
             epoch, state, net, validation_set_loader, learning_rate, optimizer, loss_fn)
-        scheduler.step()
+        if epoch > opt.lds:
+            scheduler.step()
         plot_progress(state, name, img_path=path)
 
     best_validation_acc, best_validation_epoch = state.get_best_validation_acc()
