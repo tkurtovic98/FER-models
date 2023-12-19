@@ -79,6 +79,31 @@ label_to_weight: dict[int, float] = {
     6: 193/91
 }
 
+import datetime
+import json
+
+def save_config(path: str, name: str,  batch_size: int, decay_start: int, decay_interval: int, decay_factor: int):
+    save_dict = {
+        "meta": {
+            "name": name,
+            "start_time": datetime.datetime.now().strftime("%d/%m/%Y, %H:%M:%S")
+        },
+        "config": {
+            "batch_size": batch_size,
+            "decay": {
+                "start": decay_start,
+                "interval": decay_interval,
+                "factor": decay_factor
+            }
+        }
+    }
+
+    os.makedirs(path, exist_ok=True)
+
+    with open(f'{path}/train_config.json', 'w', encoding='utf8') as file:
+        json.dump(save_dict, file)
+
+
 
 if __name__ == "__main__":
     opt = parse_args()
@@ -91,6 +116,8 @@ if __name__ == "__main__":
 
     use_cuda = torch.cuda.is_available()
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    
+    save_config(path=path, name=name, batch_size=opt.bs, decay_start=opt.lds, decay_interval=opt.lde, decay_factor=opt.ldr)
 
     if use_cuda:
         print(f'Cuda device active: {torch.cuda.get_device_name(0)}')
