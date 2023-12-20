@@ -179,13 +179,13 @@ if __name__ == "__main__":
 
         net.load_state_dict(checkpoint.net)
 
-        state.best_test_acc = checkpoint.best_val_acc
-        state.best_test_acc_epoch = checkpoint.best_val_epoch
+        # state.best_test_acc = checkpoint.best_val_acc
+        # state.best_test_acc_epoch = checkpoint.best_val_epoch
 
-        state.best_validation_acc = checkpoint.best_test_acc
-        state.best_validation_acc_epoch = checkpoint.best_val_epoch
+        # state.best_validation_acc = checkpoint.best_test_acc
+        # state.best_validation_acc_epoch = checkpoint.best_val_epoch
 
-        start_epoch = checkpoint.best_val_epoch + 1
+        # start_epoch = checkpoint.best_val_epoch + 1
     else:
         print('==> Building model..')
 
